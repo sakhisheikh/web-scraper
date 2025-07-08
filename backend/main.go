@@ -71,6 +71,7 @@ func main() {
 
 		if err := sqlDB.Ping(); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "down", "db_error": "DB Ping failed" + err.Error()})
+			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{"status": "up", "db_status": "connected"})

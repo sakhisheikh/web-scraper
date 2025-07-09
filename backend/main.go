@@ -100,7 +100,7 @@ func main() {
 
 	r.Use(DBMiddlewareCtx(db))
 
-	services.StartWorkers()
+	services.StartWorkers(db)
 
 	r.GET("/health", func(c *gin.Context) {
 

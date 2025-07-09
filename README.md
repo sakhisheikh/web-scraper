@@ -14,3 +14,7 @@
   -p 3306:3306 \
   -d mysql/mysql-server:8.0
     ```
+
+
+#### TODOs
+ - Add seeds for DB the task in the end

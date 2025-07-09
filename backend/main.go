@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"web-scraper/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -32,6 +33,12 @@ func ConnectMySql() *gorm.DB {
 		log.Fatalf("Failed to connect to DB")
 	}
 
+	err = database.AutoMigrate(&models.URLAnalysis{})
+
+	if err != nil {
+		log.Fatalf("Failed to auto migrate db %v", err)
+	}
+
 	log.Println("Database is successfully connected")
 
 	return database
@@ -43,6 +50,44 @@ func DBMiddlewareCtx(db *gorm.DB) gin.HandlerFunc {
 		ctx.Set("db", db)
 		ctx.Next()
 	}
+}
+
+type AddURLInput struct {
+	URL string `json:"url" binding:"required,url"`
+}
+
+func AddURL(c *gin.Context) {
+	dbInstance, exists := c.Get("db")
+
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database instance not found"})
+		return
+	}
+
+	db := dbInstance.(*gorm.DB)
+
+	var input AddURLInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	urlAnalysis := models.URLAnalysis{URL: input.URL, Status: "queued"}
+
+	result := db.Create(&urlAnalysis)
+	if result.Error != nil {
+		//todo: error for duplicate url creation
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add URL: " + result.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Url has been added",
+		"id":      urlAnalysis.ID,
+		"url":     urlAnalysis.URL,
+		"status":  urlAnalysis.Status,
+	})
 }
 
 func main() {
@@ -83,6 +128,11 @@ func main() {
 			"message": "pong",
 		})
 	})
+
+	urlGroup := r.Group("/urls")
+	{
+		urlGroup.POST("/", AddURL)
+	}
 
 	if err := r.Run(); err != nil {
 		log.Fatalf("Failed to start the server")

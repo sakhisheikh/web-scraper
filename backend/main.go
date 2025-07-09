@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"web-scraper/models"
+	"web-scraper/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -82,6 +83,8 @@ func AddURL(c *gin.Context) {
 		return
 	}
 
+	services.EnqueueURL(urlAnalysis.ID)
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Url has been added",
 		"id":      urlAnalysis.ID,
@@ -96,6 +99,8 @@ func main() {
 	r := gin.Default()
 
 	r.Use(DBMiddlewareCtx(db))
+
+	services.StartWorkers()
 
 	r.GET("/health", func(c *gin.Context) {
 

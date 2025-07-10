@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"log"
+	netURL "net/url"
 	"strings"
 	"time"
 	"web-scraper/models"
@@ -82,6 +83,7 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 	})
 
 	var h1Count, h2Count, h3Count, h4Count, h5Count, h6Count int
+	var externalLinksCount, internalLinksCount int
 
 	c.OnHTML("h1", func(e *colly.HTMLElement) {
 		h1Count++
@@ -106,6 +108,26 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 		h6Count++
 	})
 
+	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
+		link := e.Attr("href")
+		absoluteUrl := e.Request.AbsoluteURL(link)
+
+		if absoluteUrl == "" || strings.Contains(absoluteUrl, "#") || strings.HasPrefix(absoluteUrl, "javascript:") {
+			return
+		}
+
+		parsedAbsoluteURL, err := netURL.Parse(absoluteUrl)
+		if err != nil {
+			log.Printf("parsing error for the link %v", parsedAbsoluteURL)
+		}
+
+		if parsedAbsoluteURL.Host == e.Request.URL.Host {
+			internalLinksCount++
+		} else {
+			externalLinksCount++
+		}
+	})
+
 	err := c.Visit(urlAnalysis.URL)
 
 	if err != nil {
@@ -126,6 +148,8 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 		urlAnalysis.H4Count = h4Count
 		urlAnalysis.H5Count = h5Count
 		urlAnalysis.H6Count = h6Count
+		urlAnalysis.InternalLinkCount = internalLinksCount
+		urlAnalysis.ExternalLinkCount = externalLinksCount
 	}
 
 	result := db.Save(&urlAnalysis)

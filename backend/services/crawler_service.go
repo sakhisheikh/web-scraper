@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -52,29 +53,86 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 
 	c.SetRequestTimeout(30 * time.Second)
 
+	var crawlError error
+
 	c.OnError(func(r *colly.Response, err error) {
 		urlAnalysis.Status = "errored"
 
-		// set Urlanalysis error state
-		db.Save(&urlAnalysis)
+		crawlError = fmt.Errorf("HTTP Error %d - %s", r.StatusCode, err.Error())
+
+		log.Printf("Errored Visit onError - %v", crawlError)
 	})
 
-	c.OnHTML("html", func(e *colly.HTMLElement) {
-
-		if strings.Contains(strings.ToLower(e.DOM.Find("html").Parent().Text()), "<!doctype html>") {
-			urlAnalysis.HTMLVersion = "HTML5"
-		} else {
-			urlAnalysis.HTMLVersion = "HTML4"
-		}
-
+	c.OnHTML("title", func(e *colly.HTMLElement) {
+		urlAnalysis.PageTitle = e.Text
 	})
 
 	c.OnResponse(func(r *colly.Response) {
 		log.Println(string(r.Body))
+
+		bodyString := strings.ToLower(string(r.Body))
+		bodyString = strings.TrimSpace(bodyString)
+
+		if strings.HasPrefix(bodyString, "<!doctype html>") {
+			urlAnalysis.HTMLVersion = "HTML5"
+		} else {
+			urlAnalysis.HTMLVersion = "HTML4.01"
+		}
+		// could ass XHTML etc
 	})
 
-	c.Visit(urlAnalysis.URL)
+	var h1Count, h2Count, h3Count, h4Count, h5Count, h6Count int
 
-	db.Save(&urlAnalysis)
+	c.OnHTML("h1", func(e *colly.HTMLElement) {
+		h1Count++
+	})
+	c.OnHTML("h2", func(e *colly.HTMLElement) {
+		h2Count++
+	})
+
+	c.OnHTML("h3", func(e *colly.HTMLElement) {
+		h3Count++
+	})
+
+	c.OnHTML("h4", func(e *colly.HTMLElement) {
+		h4Count++
+	})
+
+	c.OnHTML("h5", func(e *colly.HTMLElement) {
+		h5Count++
+	})
+
+	c.OnHTML("h6", func(e *colly.HTMLElement) {
+		h6Count++
+	})
+
+	err := c.Visit(urlAnalysis.URL)
+
+	if err != nil {
+		if crawlError == nil {
+			crawlError = fmt.Errorf("visit error %v", err)
+		}
+	} else {
+		log.Printf("Colly visit is completed for %s - %d", urlAnalysis.URL, analysisID)
+	}
+
+	if crawlError != nil {
+		urlAnalysis.Status = "errored"
+	} else {
+		urlAnalysis.Status = "done"
+		urlAnalysis.H1Count = h1Count
+		urlAnalysis.H2Count = h2Count
+		urlAnalysis.H3Count = h3Count
+		urlAnalysis.H4Count = h4Count
+		urlAnalysis.H5Count = h5Count
+		urlAnalysis.H6Count = h6Count
+	}
+
+	result := db.Save(&urlAnalysis)
+	if result.Error != nil {
+		log.Printf("failed to save entry for  %s - %d - %v", urlAnalysis.URL, analysisID, result.Error)
+	} else {
+		log.Printf("worker is finished processing for  %s - %d - %v", urlAnalysis.URL, analysisID, urlAnalysis)
+	}
 
 }

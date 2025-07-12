@@ -20,8 +20,13 @@
  - I used Colly and also did some research on Chromedp(because of SPAs). I choose Colly to prototype the soluiton. The only limitation is clien side rendered web apps will have insuffient data through Collly.
 
   Limitations:
-   - netflix returned zero html tags as it was client side rendered webpage `"https://www.netflix.com/browse"`
+All these findings can be addressed later in the future as I focused on a workable solution for now given the time contraints.
+   - netflix returned zero html tags as it was client side rendered webpage `"https://www.netflix.com/browse"`. we need headless crawler for that that comes with performance overhead `chromedp` as it would be slow and would require more infrastructure (e.g we need chromium for that)
    - Iframe was not crawled. We need to grab iframe `src`, it needs to be crawled within the crawl routine or a separate one
+   - Checking inaccessible is a concurrent blocking operation request, ideally we can offoload that task to separate process/goroutine and send back the partial response to the client and show inaccessible are still processing and update it real time as the processing finishes.
+   - Bot detection (403 forbidden) 
+   - Observed login form can also be dynamically added through JS so could be skipped by `colly`, `chromedp` could
+   be a nice option.
 
 
 #### TODOs

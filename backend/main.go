@@ -12,6 +12,7 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func ConnectMySql() *gorm.DB {
@@ -76,7 +77,14 @@ func AddURL(c *gin.Context) {
 
 	urlAnalysis := models.URLAnalysis{URL: input.URL, Status: "queued"}
 
-	result := db.Create(&urlAnalysis)
+	result := db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "url"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"status":     "queued",
+			"updated_at": gorm.Expr("NOW()"),
+		}),
+	}).Create(&urlAnalysis)
+
 	if result.Error != nil {
 		//todo: error for duplicate url creation
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add URL: " + result.Error.Error()})

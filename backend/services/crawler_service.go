@@ -1,10 +1,13 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	netURL "net/url"
 	"strings"
+	"sync"
 	"time"
 	"web-scraper/models"
 
@@ -64,6 +67,8 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 		log.Printf("Errored Visit onError - %v", crawlError)
 	})
 
+	// refactor to initialize it for update again other the db retains the previous value
+
 	c.OnHTML("title", func(e *colly.HTMLElement) {
 		urlAnalysis.PageTitle = e.Text
 	})
@@ -84,6 +89,8 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 
 	var h1Count, h2Count, h3Count, h4Count, h5Count, h6Count int
 	var externalLinksCount, internalLinksCount int
+	var allLinks []string
+	var hasLoginForm bool
 
 	c.OnHTML("h1", func(e *colly.HTMLElement) {
 		h1Count++
@@ -126,6 +133,13 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 		} else {
 			externalLinksCount++
 		}
+		// could be a channel too to enable stream processing of links like as soon as you found one link starts processing
+		allLinks = append(allLinks, absoluteUrl)
+	})
+
+	c.OnHTML("form:has(input[type=password]), form:has(input[name=password])", func(h *colly.HTMLElement) {
+		// it could miss modern browser login where first you have to enter only email/username e.g disneyplus login form
+		hasLoginForm = true
 	})
 
 	err := c.Visit(urlAnalysis.URL)
@@ -138,6 +152,12 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 		log.Printf("Colly visit is completed for %s - %d", urlAnalysis.URL, analysisID)
 	}
 
+	var brokenLinks []BrokenLink
+	var inaccessibleLinksCount int
+	if crawlError == nil {
+		brokenLinks, inaccessibleLinksCount = checkLinks(allLinks)
+	}
+
 	if crawlError != nil {
 		urlAnalysis.Status = "errored"
 	} else {
@@ -148,15 +168,104 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 		urlAnalysis.H4Count = h4Count
 		urlAnalysis.H5Count = h5Count
 		urlAnalysis.H6Count = h6Count
+		urlAnalysis.HasLoginForm = hasLoginForm
 		urlAnalysis.InternalLinkCount = internalLinksCount
 		urlAnalysis.ExternalLinkCount = externalLinksCount
+		urlAnalysis.InaccessibleLinkCount = inaccessibleLinksCount
+		brokenLinksJson, err := json.Marshal(brokenLinks)
+
+		if err != nil {
+			log.Println("Error MArshalling broken links")
+		} else {
+			urlAnalysis.BrokenLinks = string(brokenLinksJson)
+		}
+
 	}
 
-	result := db.Save(&urlAnalysis)
+	result := db.Select("*").Save(&urlAnalysis)
 	if result.Error != nil {
 		log.Printf("failed to save entry for  %s - %d - %v", urlAnalysis.URL, analysisID, result.Error)
 	} else {
 		log.Printf("worker is finished processing for  %s - %d - %v", urlAnalysis.URL, analysisID, urlAnalysis)
 	}
 
+}
+
+func checkLinks(links []string) ([]BrokenLink, int) {
+
+	if len(links) == 0 {
+		return []BrokenLink{}, 0
+	}
+
+	linksToCheck := make(chan string, len(links))
+	brokenLinksChan := make(chan BrokenLink, len(links))
+
+	var wg sync.WaitGroup
+
+	var linksCheckerWorkers = 20
+
+	httpClient := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	for i := 0; i < linksCheckerWorkers; i++ {
+
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			for link := range linksToCheck {
+				func(currentLink string) {
+					resp, err := httpClient.Head(currentLink)
+
+					if err != nil {
+						brokenLinksChan <- BrokenLink{
+							ErrorMessage: err.Error(),
+							StatusCode:   0,
+							URL:          currentLink,
+						}
+						return
+					}
+
+					defer resp.Body.Close()
+
+					if resp.StatusCode >= 400 {
+						brokenLinksChan <- BrokenLink{
+							StatusCode:   resp.StatusCode,
+							ErrorMessage: http.StatusText(resp.StatusCode),
+							URL:          currentLink,
+						}
+					}
+
+				}(link)
+			}
+
+		}()
+	}
+
+	for _, link := range links {
+		linksToCheck <- link
+	}
+
+	close(linksToCheck)
+
+	wg.Wait()
+
+	close(brokenLinksChan)
+
+	var collectedBrokenLinks []BrokenLink
+	var inaccessibleLinksCount int
+	for bl := range brokenLinksChan {
+		collectedBrokenLinks = append(collectedBrokenLinks, bl)
+		inaccessibleLinksCount++
+	}
+
+	return collectedBrokenLinks, inaccessibleLinksCount
+
+}
+
+type BrokenLink struct {
+	URL          string `json:"url"`
+	StatusCode   int    `json:"status"`
+	ErrorMessage string `json:"err_message,omitempty"`
 }

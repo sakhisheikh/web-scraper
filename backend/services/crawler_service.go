@@ -1,7 +1,6 @@
 package services
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -152,7 +151,7 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 		log.Printf("Colly visit is completed for %s - %d", urlAnalysis.URL, analysisID)
 	}
 
-	var brokenLinks []BrokenLink
+	var brokenLinks []models.BrokenLink
 	var inaccessibleLinksCount int
 	if crawlError == nil {
 		brokenLinks, inaccessibleLinksCount = checkLinks(allLinks)
@@ -172,14 +171,7 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 		urlAnalysis.InternalLinkCount = internalLinksCount
 		urlAnalysis.ExternalLinkCount = externalLinksCount
 		urlAnalysis.InaccessibleLinkCount = inaccessibleLinksCount
-		brokenLinksJson, err := json.Marshal(brokenLinks)
-
-		if err != nil {
-			log.Println("Error MArshalling broken links")
-		} else {
-			urlAnalysis.BrokenLinks = string(brokenLinksJson)
-		}
-
+		urlAnalysis.BrokenLinks = brokenLinks
 	}
 
 	result := db.Select("*").Save(&urlAnalysis)
@@ -191,14 +183,14 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 
 }
 
-func checkLinks(links []string) ([]BrokenLink, int) {
+func checkLinks(links []string) ([]models.BrokenLink, int) {
 
 	if len(links) == 0 {
-		return []BrokenLink{}, 0
+		return []models.BrokenLink{}, 0
 	}
 
 	linksToCheck := make(chan string, len(links))
-	brokenLinksChan := make(chan BrokenLink, len(links))
+	brokenLinksChan := make(chan models.BrokenLink, len(links))
 
 	var wg sync.WaitGroup
 
@@ -219,7 +211,7 @@ func checkLinks(links []string) ([]BrokenLink, int) {
 					resp, err := httpClient.Head(currentLink)
 
 					if err != nil {
-						brokenLinksChan <- BrokenLink{
+						brokenLinksChan <- models.BrokenLink{
 							ErrorMessage: err.Error(),
 							StatusCode:   0,
 							URL:          currentLink,
@@ -230,7 +222,7 @@ func checkLinks(links []string) ([]BrokenLink, int) {
 					defer resp.Body.Close()
 
 					if resp.StatusCode >= 400 {
-						brokenLinksChan <- BrokenLink{
+						brokenLinksChan <- models.BrokenLink{
 							StatusCode:   resp.StatusCode,
 							ErrorMessage: http.StatusText(resp.StatusCode),
 							URL:          currentLink,
@@ -253,7 +245,7 @@ func checkLinks(links []string) ([]BrokenLink, int) {
 
 	close(brokenLinksChan)
 
-	var collectedBrokenLinks []BrokenLink
+	var collectedBrokenLinks []models.BrokenLink
 	var inaccessibleLinksCount int
 	for bl := range brokenLinksChan {
 		collectedBrokenLinks = append(collectedBrokenLinks, bl)
@@ -262,10 +254,4 @@ func checkLinks(links []string) ([]BrokenLink, int) {
 
 	return collectedBrokenLinks, inaccessibleLinksCount
 
-}
-
-type BrokenLink struct {
-	URL          string `json:"url"`
-	StatusCode   int    `json:"status"`
-	ErrorMessage string `json:"err_message,omitempty"`
 }

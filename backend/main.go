@@ -5,9 +5,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 	"web-scraper/models"
 	"web-scraper/services"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -101,10 +104,77 @@ func AddURL(c *gin.Context) {
 	})
 }
 
+func GetAllURLs(c *gin.Context) {
+	dbInstance, exists := c.Get("db")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database instance not found"})
+		return
+	}
+
+	db := dbInstance.(*gorm.DB)
+
+	urls := []models.URLAnalysis{}
+
+	if err := db.Find(&urls).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch urls " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"urls": urls})
+
+}
+
+func GetUrlByID(c *gin.Context) {
+	dbInstance, exists := c.Get("db")
+
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database instance not found"})
+		return
+	}
+
+	db := dbInstance.(*gorm.DB)
+
+	idParam := c.Param("id")
+
+	id, err := strconv.ParseInt(idParam, 10, 64) // base 10, 64-bit integer
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid URL ID format"})
+		return
+	}
+
+	urlAnalysis := models.URLAnalysis{}
+
+	result := db.First(&urlAnalysis, id)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "could not find the record for"})
+
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch URL: " + result.Error.Error()})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, urlAnalysis)
+}
+
 func main() {
 	db := ConnectMySql()
 
 	r := gin.Default()
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+
+	r.RedirectTrailingSlash = false
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	r.Use(DBMiddlewareCtx(db))
 
@@ -144,7 +214,9 @@ func main() {
 
 	urlGroup := r.Group("/urls")
 	{
-		urlGroup.POST("/", AddURL)
+		urlGroup.POST("", AddURL)
+		urlGroup.GET("", GetAllURLs)
+		urlGroup.GET("/:id", GetUrlByID)
 	}
 
 	if err := r.Run(); err != nil {

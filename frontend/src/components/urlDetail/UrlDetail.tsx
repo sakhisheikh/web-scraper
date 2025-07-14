@@ -10,10 +10,13 @@ export default function UrlDetailView({ url }: { url: UrlDetail }) {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h2 className="text-2xl font-bold mb-4 break-all">{url.pageTitle || url.url}</h2>
+      
+      {/* Link Distribution Chart */}
       <div className="mb-6">
-        <div className="w-full h-64">
+        <h3 className="text-lg font-semibold mb-4">Link Distribution</h3>
+        <div className="w-full h-64" data-testid="link-distribution-chart">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -35,27 +38,41 @@ export default function UrlDetailView({ url }: { url: UrlDetail }) {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Broken Links Table */}
       <div>
-        <h3 className="text-lg font-semibold mb-2">Broken Links</h3>
+        <h3 className="text-lg font-semibold mb-4">Broken Links</h3>
         {url.brokenLinks.length === 0 ? (
-          <div className="text-gray-500">No broken links found.</div>
+          <div className="text-gray-500 bg-gray-50 p-4 rounded-md border border-gray-200">
+            No broken links found.
+          </div>
         ) : (
-          <table className="min-w-full border rounded">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 border-b">URL</th>
-                <th className="px-4 py-2 border-b">Status Code</th>
-              </tr>
-            </thead>
-            <tbody>
-              {url.brokenLinks.map((link, idx) => (
-                <tr key={idx}>
-                  <td className="px-4 py-2 border-b break-all">{link.url}</td>
-                  <td className="px-4 py-2 border-b">{link.statusCode}</td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b border-gray-200">URL</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b border-gray-200">Status Code</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white">
+                {url.brokenLinks.map((link, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 border-b border-gray-200 break-all text-sm text-gray-900">{link.url}</td>
+                    <td className="px-4 py-3 border-b border-gray-200 text-sm text-gray-900">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        link.statusCode >= 400 && link.statusCode < 500 
+                          ? 'bg-red-100 text-red-800' 
+                          : 'bg-orange-100 text-orange-800'
+                      }`}>
+                        {link.statusCode}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

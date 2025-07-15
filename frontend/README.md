@@ -1,69 +1,67 @@
-# React + TypeScript + Vite
+# frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## How to run
 
-Currently, two official plugins are available:
+- Install dependencies:
+  ```
+  npm install
+  ```
+- Create a `.env` file in the frontend root with your Auth0 config:
+  ```
+  VITE_AUTH0_DOMAIN=your-auth0-domain
+  VITE_AUTH0_CLIENT_ID=your-auth0-client-id
+  VITE_AUTH0_AUDIENCE=your-auth0-api-identifier
+  ```
+- Start the dev server:
+  ```
+  npm run dev
+  ```
+- The app runs at [http://localhost:5173](http://localhost:5173)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## Approach
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **React + TypeScript + Vite** for fast, modern SPA development.
+- **Modular structure**:
+  - `src/components/` – UI components (Dashboard, Sidebar, Header, Layout, etc.)
+  - `src/components/table/` – Table and card views for URLs (responsive, mobile-friendly)
+  - `src/components/urlDetail/` – URL detail and chart views
+  - `src/auth/` – All authentication logic (Auth0, login/logout, route protection)
+  - `src/api/` – Decoupled API layer for backend calls, with robust error handling
+  - `src/hooks/` – Custom hooks (e.g., real-time SSE for status updates)
+  - `src/utils/` – Mapping and utility functions
+- **Authentication**:  
+  - Uses Auth0 (free tier) for secure login/logout and route protection.
+  - All routes are protected; users must log in to use the app.
+  - Auth logic is fully modular and can be swapped if needed.
+- **Real-time updates**:  
+  - Uses Server-Sent Events (SSE) to update URL status and StatCards live.
+  - No polling; UI is always up to date.
+- **Bulk actions**:  
+  - Select URLs via checkboxes for bulk re-run analysis or delete.
+  - All actions are robust to network errors and backend downtime.
+- **Mobile-first**:  
+  - Table switches to card/list view on mobile for usability.
+  - Responsive layout throughout.
+- **Error handling**:  
+  - All API/network errors are caught and shown in the UI.
+  - If Auth0 config is missing, a generic user-friendly error is shown.
+- **Code splitting**:  
+  - Expensive routes/components are lazy-loaded for fast initial load.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Notes
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- The frontend expects the backend to be running and reachable at `/api`.
+- If the backend is down, the app will show a clear error and not crash.
+- For Auth0, you must set up an application and API in your Auth0 dashboard.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## TODOs
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Add more granular error messages and retry options for network failures.
+- Add tests for auth flows and error boundaries.
+- Polish mobile/tablet experience further if needed.

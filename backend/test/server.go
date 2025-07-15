@@ -6,12 +6,9 @@ import (
 )
 
 func main() {
-	// This line tells the server to serve files from the current directory (where server.go is)
-	// http.FileServer(http.Dir(".")) serves files relative to where the command is run.
-	// For your test, you'd put test_page_with_broken_links.html in the same directory as server.go
+
 	fs := http.FileServer(http.Dir("."))
 
-	// Register the file server to handle all requests
 	http.Handle("/", fs)
 
 	// Start the server on port 8000

@@ -1,0 +1,40 @@
+# docker-compose.yml
+version: '3.8' # Specify Docker Compose file format version
+
+services:
+  app: # Your Go application service
+    build:
+      context: . # Build from the Dockerfile in the current directory
+      dockerfile: Dockerfile
+    container_name: url-analyzer-app
+    ports:
+      - "8080:8080" # Map host port 8080 to container port 8080
+    environment: # Pass environment variables to your Go application container
+      DB_USER: ${DB_USER} # Reads from your .env file
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db # The name of the database service within the Docker Compose network
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+    depends_on: # Ensure the database starts before the application
+      - db
+    env_file: # Load environment variables from your .env file
+      - ./.env
+
+  db: # Your MySQL database service
+    image: mysql/mysql-server:8.0 # Use the official MySQL 8.0 image
+    container_name: url-analyzer-mysql
+    ports:
+      - "3306:3306" # Map host port 3306 to container port 3306
+    environment: # Set MySQL-specific environment variables for initial setup
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # Root password for MySQL
+      MYSQL_DATABASE: ${DB_NAME} # Database your app will use
+      MYSQL_USER: ${DB_USER} # User your app will use
+      MYSQL_PASSWORD: ${DB_PASSWORD} # Password for your app's user
+    volumes:
+      - db_data:/var/lib/mysql # Persistent storage for your database data
+    env_file: # Load environment variables from your .env file
+      - ./.env
+
+# Define named volumes for persistent data
+volumes:
+  db_data: # This volume will store MySQL's data persistently

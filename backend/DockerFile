@@ -1,0 +1,31 @@
+
+    FROM golang:1.22-alpine AS builder
+
+
+    WORKDIR /app
+    
+ 
+    COPY go.mod .
+    COPY go.sum .
+    
+    RUN go mod download
+    
+    COPY . .
+    
+    # Build the Go application
+    # CGO_ENABLED=0: Disables CGO. Ensures a statically linked binary, making the final image very small.
+    ENV CGO_ENABLED=0
+    RUN go build -o app -ldflags="-s -w" -tags netgo .
+    
+
+    # Use a minimal base image
+    FROM alpine:latest
+    
+    WORKDIR /root/
+    
+    COPY --from=builder /app/app .
+    
+    EXPOSE 8080
+    
+    # The 'app' executable starts Gin server
+    CMD ["./app"]

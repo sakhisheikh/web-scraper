@@ -1,7 +1,10 @@
 backend/tmp/*
+backend/test/node_modules
 
 .DS_Store
 
 backend/.env
+frontend/.env
+frontend/test-results
 
 .env

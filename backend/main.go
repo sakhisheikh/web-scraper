@@ -168,6 +168,7 @@ func main() {
 
 	r.RedirectTrailingSlash = false
 
+	// allow cors for frontend
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -176,8 +177,10 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	// so we don't need pass db or store it as global variable
 	r.Use(DBMiddlewareCtx(db))
 
+	// to be able to process more than one URL
 	services.StartWorkers(db)
 
 	r.GET("/health", func(c *gin.Context) {

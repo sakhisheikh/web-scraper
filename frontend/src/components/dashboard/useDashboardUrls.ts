@@ -77,6 +77,22 @@ export function useDashboardUrls() {
 
   const urlTableData: UrlItem[] = useMemo(() => runningUrls.map(mapUrlAnalysisToUrlItem), [runningUrls]);
 
+  // Real-time StatCard counts
+  const statCounts = useMemo(() => {
+    let completed = 0, queued = 0, running = 0, errored = 0;
+    for (const url of runningUrls) {
+      switch (url.status) {
+        case 'done': completed++; break;
+        case 'queued': queued++; break;
+        case 'running': running++; break;
+        case 'error': errored++; break;
+        case 'errored': errored++; break;
+        case 'stopped': break; // Optionally handle stopped
+      }
+    }
+    return { completed, queued, running, errored };
+  }, [runningUrls]);
+
   return {
     runningUrls,
     urlTableData,
@@ -89,5 +105,6 @@ export function useDashboardUrls() {
     handleDelete,
     handleTableError,
     setRunningUrls,
+    statCounts,
   };
 }

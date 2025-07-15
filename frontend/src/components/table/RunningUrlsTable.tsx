@@ -33,6 +33,7 @@ interface RunningUrlsTableProps {
   onDelete: (ids: string[]) => Promise<void>;
   onUpdate: (updated: UrlItem) => void;
   onError?: (error: string) => void;
+  bulkStartLabel?: string;
 }
 
 interface ColumnMeta {
@@ -104,7 +105,7 @@ function CardRow({ row, onStart, onStop, onDelete, navigate }: {
   );
 }
 
-const RunningUrlsTable: React.FC<RunningUrlsTableProps> = ({ data, onStart, onStop, onDelete, onUpdate, onError }) => {
+const RunningUrlsTable: React.FC<RunningUrlsTableProps> = ({ data, onStart, onStop, onDelete, onUpdate, onError, bulkStartLabel }) => {
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -399,7 +400,7 @@ const RunningUrlsTable: React.FC<RunningUrlsTableProps> = ({ data, onStart, onSt
               onClick={() => handleStart(selectedUrlIds)}
               className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-200 font-semibold shadow-sm"
             >
-              Start Selected
+              {bulkStartLabel || 'Start Selected'}
             </button>
             <button
               onClick={() => handleStop(selectedUrlIds)}

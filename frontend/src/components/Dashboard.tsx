@@ -18,8 +18,9 @@ const Dashboard: React.FC = () => {
     handleStop,
     handleDelete,
     handleTableError,
+    statCounts,
   } = useDashboardUrls();
-  const statCards = useStatCards();
+  const statCards = useStatCards(statCounts);
 
   return (
     <div className="space-y-10">
@@ -41,6 +42,7 @@ const Dashboard: React.FC = () => {
             onDelete={handleDelete}
             onUpdate={() => {}}
             onError={handleTableError}
+            bulkStartLabel="Re-run Analysis"
           />
         </div>
       </div>

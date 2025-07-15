@@ -1,10 +1,10 @@
 import type { DashboardCard } from '../../types/dashboard';
 
-export function useStatCards(): DashboardCard[] {
+export function useStatCards(statCounts: { completed: number; queued: number; running: number; errored: number }): DashboardCard[] {
   return [
-    { id: '1', title: 'Completed', value: '0', icon: '✅', color: 'green' },
-    { id: '2', title: 'Queued', value: '0', icon: '⏳', color: 'yellow' },
-    { id: '3', title: 'Running', value: '0', icon: '🏃', color: 'blue' },
-    { id: '4', title: 'Errored', value: '0', icon: '❌', color: 'red' }
+    { id: '1', title: 'Completed', value: statCounts.completed, icon: '✅', color: 'green' },
+    { id: '2', title: 'Queued', value: statCounts.queued, icon: '⏳', color: 'yellow' },
+    { id: '3', title: 'Running', value: statCounts.running, icon: '🏃', color: 'blue' },
+    { id: '4', title: 'Errored', value: statCounts.errored, icon: '❌', color: 'red' }
   ];
 }

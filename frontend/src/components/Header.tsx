@@ -1,4 +1,5 @@
 import React from 'react';
+import AuthButtons from '../auth/AuthButtons';
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -19,18 +20,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
             Dashboard Overview
           </h2>
         </div>
-        
         <div className="flex items-center space-x-4">
-          
-          {/* User menu */}
-          <div className="relative">
-            <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                👤
-              </div>
-              <span className="hidden md:block text-sm font-medium">Sakhi</span>
-            </button>
-          </div>
+          <AuthButtons />
         </div>
       </div>
     </header>

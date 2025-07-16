@@ -5,6 +5,7 @@ import UrlDetailView from './UrlDetail';
 import Loader from '../Loader';
 import type { UrlDetail } from '../../types/urlDetail';
 import Button from '../Button';
+import { useAuth } from '../../auth/AuthContext';
 
 export default function UrlDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -12,16 +13,18 @@ export default function UrlDetailPage() {
   const [data, setData] = useState<UrlDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { getAccessToken } = useAuth();
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     setError(null);
-    getUrlDetail(id)
+    getAccessToken()
+      .then(token => getUrlDetail(id, token))
       .then(setData)
       .catch((err: any) => setError(err.message || 'Failed to fetch URL details'))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, getAccessToken]);
 
   const handleBackToDashboard = () => {
     navigate('/');

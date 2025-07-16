@@ -15,13 +15,14 @@ export default function UrlInput({ onAdd }: { onAdd: (url: string) => void }) {
   }
 
   const handleAdd = async () => {
-    if (!value) return;
-    if (!validateUrl(value)) {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    if (!validateUrl(trimmed)) {
       setError('Please enter a valid URL (e.g., https://example.com)');
       return;
     }
     try {
-      await onAdd(value);
+      await onAdd(trimmed);
       setValue('');
       setError('');
     } catch (err: any) {

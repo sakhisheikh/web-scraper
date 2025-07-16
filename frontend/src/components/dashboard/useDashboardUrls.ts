@@ -42,8 +42,10 @@ export function useDashboardUrls() {
     setError(null);
     try {
       const token = await getAccessToken();
-      const newUrl = await addUrl(url, token);
-      setRunningUrls(urls => [...urls, newUrl]);
+      await addUrl(url, token);
+      // Fetch the latest URLs after add completes
+      const data = await getUrls(token);
+      setRunningUrls(Array.isArray(data.urls) ? data.urls : []);
     } catch (err: any) {
       setError(err.message || 'Unknown error');
       throw err;

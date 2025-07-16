@@ -10,6 +10,8 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 import { useNavigate } from 'react-router-dom';
+import DebugRerunIcon from '../icons/DebugRerunIcon';
+import DeleteIcon from '../icons/DeleteIcon';
 
 export interface UrlItem {
   id: string;
@@ -76,27 +78,33 @@ function CardRow({ row, onStart, onStop, onDelete, navigate }: {
         {(row.status === 'queued' || row.status === 'stopped' || row.status === 'error') ? (
           <button
             onClick={() => onStart([row.id])}
-            className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200 text-sm shadow"
+            className="px-3 py-1 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition-colors duration-200 text-sm shadow flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
+            {/* Start/Refresh Icon */}
+            <svg className="w-4 h-4 text-gray-700" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M7.167 12a3 3 0 0 1-5.74 1.223l-.928.376A4.001 4.001 0 1 0 1 9.556V8.333H0V11l.5.5h2.333v-1H1.568A3 3 0 0 1 7.167 12z"/><path fillRule="evenodd" clipRule="evenodd" d="M5 2.41L5.78 2l9 6v.83L10 12.017v-1.2l3.6-2.397L6 3.35V7H5V2.41z"/></svg>
             Start
           </button>
         ) : (
           <button
             onClick={() => onStop([row.id])}
-            className="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors duration-200 text-sm shadow"
+            className="px-3 py-1 border border-yellow-300 text-yellow-700 rounded-md hover:bg-yellow-50 transition-colors duration-200 text-sm shadow flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
+            {/* Stop Icon */}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
             Stop
           </button>
         )}
         <button
           onClick={() => onDelete([row.id])}
-          className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200 text-sm shadow"
+          className="px-3 py-1 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors duration-200 text-sm shadow flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
+          {/* Trash Icon */}
+          <svg className="w-4 h-4 text-red-600" viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M993.763 493.538v35c0 13.331-6.04 26.664-18.135 37.137-140.149 121.422-280.35 242.795-420.49 364.219-11.813 10.237-25.813 15.501-42.454 15.501v-35c16.644 0 30.641-5.264 42.454-15.501C695.28 773.47 835.474 652.092 975.628 530.677c12.095-10.475 18.135-23.803 18.135-37.139z" fill="#EB613C"/><path d="M30.239 528.367v-3.5-1.75-3.5-3.5-1.75-3.5-3.5-1.75-3.5-3.5-1.75-3.5c0 14.707 6.701 29.313 19.037 40.019 138.449 120.064 277.049 239.996 415.562 360.02 13.002 11.26 28.74 16.466 47.853 16.994v35c-19.108-0.528-34.851-5.734-47.853-16.994C326.325 808.382 187.725 688.45 49.276 568.386c-12.337-10.705-19.037-25.312-19.037-40.019z" fill="#EB613C"/><path d="M510.786 76.601c16.263 0 32.546 5.362 44.946 16.097 139.949 121.188 279.9 242.376 419.818 363.586 24.241 20.995 24.295 53.413 0.079 74.396C835.48 652.101 695.28 773.478 555.141 894.898c-11.814 10.238-25.813 15.502-42.451 15.502-19.109-0.528-34.853-5.734-47.854-16.994C326.324 773.382 187.724 653.45 49.275 533.386c-19.581-16.987-24.96-43.81-11.895-65.251 3.919-6.438 8.669-11.829 14.465-16.849C189.954 331.734 328.024 212.152 466.107 92.567c12.296-10.64 28.478-15.966 44.679-15.966z" fill="#ED7764"/><path d="M582.413 335.149v16.8c0-1.498-0.016-2.986-0.062-4.473-0.434-13.969-10.353-22.802-26.469-22.907-7.067-0.048-14.138-0.082-21.205-0.103a6666.65 6666.65 0 0 0-19.492-0.029H514.224c-7.358 0-14.716 0.011-22.075 0.031-8.023 0.022-16.042 0.054-24.064 0.092-12.086 0.053-21.994 5.359-24.625 14.211v-16.8c2.63-8.852 12.54-14.158 24.625-14.211 8.021-0.039 16.041-0.072 24.064-0.092 7.357-0.02 14.716-0.031 22.075-0.031H515.185c6.497 0 12.993 0.009 19.492 0.029 7.068 0.022 14.14 0.055 21.205 0.103 16.118 0.105 26.037 8.938 26.469 22.907 0.045 1.486 0.062 2.974 0.062 4.473z" fill="#BF3F1F"/></svg>
           Delete
         </button>
         <button
           onClick={() => navigate(`/urls/${row.id}`)}
-          className="px-3 py-1 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors duration-200 text-sm shadow"
+          className="px-3 py-1 border border-indigo-300 text-indigo-700 rounded-md hover:bg-indigo-50 transition-colors duration-200 text-sm shadow flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           Details
         </button>
@@ -105,7 +113,7 @@ function CardRow({ row, onStart, onStop, onDelete, navigate }: {
   );
 }
 
-const RunningUrlsTable: React.FC<RunningUrlsTableProps> = ({ data, onStart, onStop, onDelete, onUpdate, onError, bulkStartLabel }) => {
+const RunningUrlsTable: React.FC<RunningUrlsTableProps> = ({ data, onStart, onStop, onDelete, onUpdate, onError }) => {
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [globalFilter, setGlobalFilter] = useState('');
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -307,22 +315,28 @@ const RunningUrlsTable: React.FC<RunningUrlsTableProps> = ({ data, onStart, onSt
             {(row.original.status === 'queued' || row.original.status === 'stopped' || row.original.status === 'error') ? (
               <button
                 onClick={() => handleStart([row.original.id])}
-                className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200 text-sm shadow"
+                className="px-3 py-1 border border-green-300 text-green-700 rounded-md hover:bg-green-50 transition-colors duration-200 text-sm shadow flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
+                {/* Start/Refresh Icon */}
+                <svg className="w-4 h-4 text-green-700" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M7.167 12a3 3 0 0 1-5.74 1.223l-.928.376A4.001 4.001 0 1 0 1 9.556V8.333H0V11l.5.5h2.333v-1H1.568A3 3 0 0 1 7.167 12z"/><path fillRule="evenodd" clipRule="evenodd" d="M5 2.41L5.78 2l9 6v.83L10 12.017v-1.2l3.6-2.397L6 3.35V7H5V2.41z"/></svg>
                 Start
               </button>
             ) : (
               <button
                 onClick={() => handleStop([row.original.id])}
-                className="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors duration-200 text-sm shadow"
+                className="px-3 py-1 border border-yellow-300 text-yellow-700 rounded-md hover:bg-yellow-50 transition-colors duration-200 text-sm shadow flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
+                {/* Stop Icon */}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
                 Stop
               </button>
             )}
             <button
               onClick={() => handleDelete([row.original.id])}
-              className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200 text-sm shadow"
+              className="px-3 py-1 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors duration-200 text-sm shadow flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
+              {/* Trash Icon */}
+              <svg className="w-4 h-4 text-red-600" viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M993.763 493.538v35c0 13.331-6.04 26.664-18.135 37.137-140.149 121.422-280.35 242.795-420.49 364.219-11.813 10.237-25.813 15.501-42.454 15.501v-35c16.644 0 30.641-5.264 42.454-15.501C695.28 773.47 835.474 652.092 975.628 530.677c12.095-10.475 18.135-23.803 18.135-37.139z" fill="#EB613C"/><path d="M30.239 528.367v-3.5-1.75-3.5-3.5-1.75-3.5-3.5-1.75-3.5-3.5-1.75-3.5c0 14.707 6.701 29.313 19.037 40.019 138.449 120.064 277.049 239.996 415.562 360.02 13.002 11.26 28.74 16.466 47.853 16.994v35c-19.108-0.528-34.851-5.734-47.853-16.994C326.325 808.382 187.725 688.45 49.276 568.386c-12.337-10.705-19.037-25.312-19.037-40.019z" fill="#EB613C"/><path d="M510.786 76.601c16.263 0 32.546 5.362 44.946 16.097 139.949 121.188 279.9 242.376 419.818 363.586 24.241 20.995 24.295 53.413 0.079 74.396C835.48 652.101 695.28 773.478 555.141 894.898c-11.814 10.238-25.813 15.502-42.451 15.502-19.109-0.528-34.853-5.734-47.854-16.994C326.324 773.382 187.724 653.45 49.275 533.386c-19.581-16.987-24.96-43.81-11.895-65.251 3.919-6.438 8.669-11.829 14.465-16.849C189.954 331.734 328.024 212.152 466.107 92.567c12.296-10.64 28.478-15.966 44.679-15.966z" fill="#ED7764"/><path d="M582.413 335.149v16.8c0-1.498-0.016-2.986-0.062-4.473-0.434-13.969-10.353-22.802-26.469-22.907-7.067-0.048-14.138-0.082-21.205-0.103a6666.65 6666.65 0 0 0-19.492-0.029H514.224c-7.358 0-14.716 0.011-22.075 0.031-8.023 0.022-16.042 0.054-24.064 0.092-12.086 0.053-21.994 5.359-24.625 14.211v-16.8c2.63-8.852 12.54-14.158 24.625-14.211 8.021-0.039 16.041-0.072 24.064-0.092 7.357-0.02 14.716-0.031 22.075-0.031H515.185c6.497 0 12.993 0.009 19.492 0.029 7.068 0.022 14.14 0.055 21.205 0.103 16.118 0.105 26.037 8.938 26.469 22.907 0.045 1.486 0.062 2.974 0.062 4.473z" fill="#BF3F1F"/></svg>
               Delete
             </button>
           </div>
@@ -398,21 +412,24 @@ const RunningUrlsTable: React.FC<RunningUrlsTableProps> = ({ data, onStart, onSt
             <span className="text-indigo-800 font-medium">{selectedUrlIds.length} URL(s) selected</span>
             <button
               onClick={() => handleStart(selectedUrlIds)}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-200 font-semibold shadow-sm"
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-200 font-semibold shadow-sm flex items-center gap-2"
             >
-              {bulkStartLabel || 'Start Selected'}
+              {/* Start/Refresh Icon */}
+              <svg className="w-4 h-4 text-white" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M7.167 12a3 3 0 0 1-5.74 1.223l-.928.376A4.001 4.001 0 1 0 1 9.556V8.333H0V11l.5.5h2.333v-1H1.568A3 3 0 0 1 7.167 12z"/><path fillRule="evenodd" clipRule="evenodd" d="M5 2.41L5.78 2l9 6v.83L10 12.017v-1.2l3.6-2.397L6 3.35V7H5V2.41z"/></svg>
             </button>
             <button
               onClick={() => handleStop(selectedUrlIds)}
-              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors duration-200 font-semibold shadow-sm"
+              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors duration-200 font-semibold shadow-sm flex items-center gap-2"
             >
-              Stop Selected
+              {/* Stop Icon */}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
             </button>
             <button
               onClick={() => handleDelete(selectedUrlIds)}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors duration-200 font-semibold shadow-sm"
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors duration-200 font-semibold shadow-sm flex items-center gap-2"
             >
-              Delete Selected
+              {/* Trash Icon */}
+              <svg className="w-4 h-4 text-white" viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M993.763 493.538v35c0 13.331-6.04 26.664-18.135 37.137-140.149 121.422-280.35 242.795-420.49 364.219-11.813 10.237-25.813 15.501-42.454 15.501v-35c16.644 0 30.641-5.264 42.454-15.501C695.28 773.47 835.474 652.092 975.628 530.677c12.095-10.475 18.135-23.803 18.135-37.139z" fill="#EB613C"/><path d="M30.239 528.367v-3.5-1.75-3.5-3.5-1.75-3.5-3.5-1.75-3.5-3.5-1.75-3.5c0 14.707 6.701 29.313 19.037 40.019 138.449 120.064 277.049 239.996 415.562 360.02 13.002 11.26 28.74 16.466 47.853 16.994v35c-19.108-0.528-34.851-5.734-47.853-16.994C326.325 808.382 187.725 688.45 49.276 568.386c-12.337-10.705-19.037-25.312-19.037-40.019z" fill="#EB613C"/><path d="M510.786 76.601c16.263 0 32.546 5.362 44.946 16.097 139.949 121.188 279.9 242.376 419.818 363.586 24.241 20.995 24.295 53.413 0.079 74.396C835.48 652.101 695.28 773.478 555.141 894.898c-11.814 10.238-25.813 15.502-42.451 15.502-19.109-0.528-34.853-5.734-47.854-16.994C326.324 773.382 187.724 653.45 49.275 533.386c-19.581-16.987-24.96-43.81-11.895-65.251 3.919-6.438 8.669-11.829 14.465-16.849C189.954 331.734 328.024 212.152 466.107 92.567c12.296-10.64 28.478-15.966 44.679-15.966z" fill="#ED7764"/><path d="M582.413 335.149v16.8c0-1.498-0.016-2.986-0.062-4.473-0.434-13.969-10.353-22.802-26.469-22.907-7.067-0.048-14.138-0.082-21.205-0.103a6666.65 6666.65 0 0 0-19.492-0.029H514.224c-7.358 0-14.716 0.011-22.075 0.031-8.023 0.022-16.042 0.054-24.064 0.092-12.086 0.053-21.994 5.359-24.625 14.211v-16.8c2.63-8.852 12.54-14.158 24.625-14.211 8.021-0.039 16.041-0.072 24.064-0.092 7.357-0.02 14.716-0.031 22.075-0.031H515.185c6.497 0 12.993 0.009 19.492 0.029 7.068 0.022 14.14 0.055 21.205 0.103 16.118 0.105 26.037 8.938 26.469 22.907 0.045 1.486 0.062 2.974 0.062 4.473z" fill="#BF3F1F"/></svg>
             </button>
           </div>
         )}

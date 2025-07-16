@@ -1,6 +1,3 @@
-# docker-compose.yml
-version: '3.8' # Specify Docker Compose file format version
-
 services:
   app: # Your Go application service
     build:
@@ -15,25 +12,33 @@ services:
       DB_HOST: db # The name of the database service within the Docker Compose network
       DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME}
-    depends_on: # Ensure the database starts before the application
-      - db
+    depends_on:
+      db:
+        condition: service_healthy #
     env_file: # Load environment variables from your .env file
       - ./.env
 
   db: # Your MySQL database service
-    image: mysql/mysql-server:8.0 # Use the official MySQL 8.0 image
+    image: mysql/mysql-server:8.0
     container_name: url-analyzer-mysql
     ports:
-      - "3306:3306" # Map host port 3306 to container port 3306
-    environment: # Set MySQL-specific environment variables for initial setup
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # Root password for MySQL
-      MYSQL_DATABASE: ${DB_NAME} # Database your app will use
-      MYSQL_USER: ${DB_USER} # User your app will use
-      MYSQL_PASSWORD: ${DB_PASSWORD} # Password for your app's user
+      - "3306:3306"
+    environment: # This is correct for MySQL image initial setup
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - db_data:/var/lib/mysql # Persistent storage for your database data
-    env_file: # Load environment variables from your .env file
+      - db_data:/var/lib/mysql
+    env_file:
       - ./.env
+    healthcheck: # <-- FIX: This 'healthcheck' block needs to be OUTSIDE the 'environment' block,
+                 #           at the same level as 'image', 'container_name', 'environment', etc.
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u $$MYSQL_USER -p$$MYSQL_PASSWORD"] # Your test command is correct
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s 
 
 # Define named volumes for persistent data
 volumes:

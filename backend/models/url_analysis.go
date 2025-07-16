@@ -58,7 +58,7 @@ type URLAnalysis struct {
 	InternalLinkCount     int         `gorm:"default:0" json:"internalLinkCount"`
 	ExternalLinkCount     int         `gorm:"default:0" json:"externalLinkCount"`
 	InaccessibleLinkCount int         `gorm:"default:0" json:"inaccessibleLinkCount"`
-	BrokenLinks           BrokenLinks `gorm:"type:json" json:"brokenLinks,omitempty"`
+	BrokenLinks           BrokenLinks `gorm:"type:json" json:"brokenLinks"`
 	HasLoginForm          bool        `gorm:"default:false" json:"hasLoginForm"`
 }
 

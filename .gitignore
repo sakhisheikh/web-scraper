@@ -10,3 +10,5 @@ frontend/playwright-report
 test-result
 
 .env
+
+playwright-report

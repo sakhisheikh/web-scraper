@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
+	authMiddleware "web-scraper/middlewares"
 	"web-scraper/models"
 	"web-scraper/services"
 
@@ -75,6 +77,13 @@ func AddURL(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	input.URL = strings.TrimSpace(input.URL)
+
+	if input.URL == "" { // Check if it became empty after trimming, that leads to 500 otherwise
+		c.JSON(http.StatusBadRequest, gin.H{"error": "URL cannot be empty or just whitespace"})
 		return
 	}
 
@@ -216,6 +225,8 @@ func main() {
 	})
 
 	urlGroup := r.Group("/urls")
+	// Add authenticaion middleware using auth0
+	urlGroup.Use(authMiddleware.EnsureAuthenitcation())
 	{
 		urlGroup.POST("", AddURL)
 		urlGroup.GET("", GetAllURLs)

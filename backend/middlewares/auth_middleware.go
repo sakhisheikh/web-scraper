@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -27,15 +28,16 @@ func EnsureAuthenitcation() gin.HandlerFunc {
 	auth0Domain := config.GetAuth0Domain()
 	auth0Audience := config.GetAuth0Audience()
 
+	issuerURL := &url.URL{Scheme: "https", Host: auth0Domain} // <-- FIX: Removed Path: ".well-known/jwks.json"
 	jwksProvider := jwks.NewCachingProvider(
-		&url.URL{Scheme: "https", Host: auth0Domain, Path: ".well-known/jwks.json"},
+		issuerURL, // Pass the corrected issuerURL
 		10*time.Minute,
 	)
 
 	jwtValidator, err := validator.New(
 		jwksProvider.KeyFunc,
 		validator.RS256,
-		auth0Domain,
+		fmt.Sprintf("https://%s/", auth0Domain),
 		[]string{auth0Audience},
 		validator.WithCustomClaims(func() validator.CustomClaims { return &CustomClaims{} }),
 		validator.WithAllowedClockSkew(time.Minute), // Allow 1 minute clock skew

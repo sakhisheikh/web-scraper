@@ -73,8 +73,6 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 	})
 
 	c.OnResponse(func(r *colly.Response) {
-		log.Println(string(r.Body))
-
 		bodyString := strings.ToLower(string(r.Body))
 		bodyString = strings.TrimSpace(bodyString)
 
@@ -151,10 +149,11 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 		log.Printf("Colly visit is completed for %s - %d", urlAnalysis.URL, analysisID)
 	}
 
-	var brokenLinks []models.BrokenLink
+	var brokenLinks []models.BrokenLink = []models.BrokenLink{}
 	var inaccessibleLinksCount int
 	if crawlError == nil {
 		brokenLinks, inaccessibleLinksCount = checkLinks(allLinks)
+
 	}
 
 	if crawlError != nil {
@@ -200,7 +199,7 @@ func checkLinks(links []string) ([]models.BrokenLink, int) {
 		Timeout: 5 * time.Second,
 	}
 
-	for i := 0; i < linksCheckerWorkers; i++ {
+	for range linksCheckerWorkers {
 
 		wg.Add(1)
 
@@ -245,7 +244,7 @@ func checkLinks(links []string) ([]models.BrokenLink, int) {
 
 	close(brokenLinksChan)
 
-	var collectedBrokenLinks []models.BrokenLink
+	var collectedBrokenLinks []models.BrokenLink = []models.BrokenLink{}
 	var inaccessibleLinksCount int
 	for bl := range brokenLinksChan {
 		collectedBrokenLinks = append(collectedBrokenLinks, bl)

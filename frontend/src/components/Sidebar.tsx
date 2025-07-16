@@ -6,11 +6,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
-  const menuItems = [
-    { name: 'Dashboard', icon: '📊', active: true },
-    { name: 'Analytics', icon: '📈' },
-    { name: 'Users', icon: '👥' },
-  ];
+  const menuItems = [{ name: 'Dashboard', icon: '📊' }];
 
   return (
     <>

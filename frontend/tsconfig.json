@@ -1,4 +1,24 @@
 {
+  "compilerOptions": {
+    // ... other options
+    "lib": ["dom", "dom.iterable", "esnext"], // Ensure 'dom' is included for HTMLElement types
+    "types": [
+      "jest",
+      "@testing-library/jest-dom" // Add this line!
+    ],
+    "jsx": "react-jsx",
+    "esModuleInterop": true, 
+    // ... other options
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts",
+    "jest.setup.ts" // If your setup file is .ts, include it here
+  ],
+  "exclude": [
+    "node_modules"
+  ],
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },

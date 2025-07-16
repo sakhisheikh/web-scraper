@@ -4,6 +4,7 @@ import { getUrlDetail } from '../../api/urls';
 import UrlDetailView from './UrlDetail';
 import Loader from '../Loader';
 import type { UrlDetail } from '../../types/urlDetail';
+import Button from '../Button';
 
 export default function UrlDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -38,15 +39,16 @@ export default function UrlDetailPage() {
     <div className="space-y-6">
       {/* Back Button and Page Title */}
       <div className="flex items-center gap-4">
-        <button
+        <Button
+          variant="secondary"
+          className="flex items-center gap-2 cursor-pointer"
           onClick={handleBackToDashboard}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-200 font-medium"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           Back to Dashboard
-        </button>
+        </Button>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">URL Analysis Details</h1>
       </div>
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Button from './Button';
 
 export default function UrlInput({ onAdd }: { onAdd: (url: string) => void }) {
   const [value, setValue] = useState('');
@@ -47,12 +48,13 @@ export default function UrlInput({ onAdd }: { onAdd: (url: string) => void }) {
           }}
           onKeyDown={handleKeyDown}
         />
-        <button
-          className="btn btn-primary px-4 py-2 rounded bg-blue-600 text-white"
+        <Button
+          variant="primary"
+          className="cursor-pointer"
           onClick={handleAdd}
         >
           Add
-        </button>
+        </Button>
       </div>
       {error && <div className="text-red-500 text-sm">{error}</div>}
     </div>

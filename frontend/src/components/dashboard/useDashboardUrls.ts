@@ -4,18 +4,21 @@ import type { UrlItem } from '../table/RunningUrlsTable';
 import { getUrls, addUrl, startUrls, stopUrls, deleteUrls } from '../../api/urls';
 import { mapUrlAnalysisToUrlItem } from '../../utils/urlMappers';
 import { useUrlStatusStream } from '../../hooks/useUrlStatusStream';
+import { useAuth } from '../../auth/AuthContext';
 
 export function useDashboardUrls() {
   const [runningUrls, setRunningUrls] = useState<UrlAnalysis[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { getAccessToken } = useAuth();
 
   useEffect(() => {
     const fetchUrls = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getUrls();
+        const token = await getAccessToken();
+        const data = await getUrls(token);
         setRunningUrls(Array.isArray(data.urls) ? data.urls : []);
       } catch (err: any) {
         setError(err.message || 'Unknown error');
@@ -24,7 +27,7 @@ export function useDashboardUrls() {
       }
     };
     fetchUrls();
-  }, []);
+  }, [getAccessToken]);
 
   useUrlStatusStream(
     useCallback((updatedUrl: UrlAnalysis) => {
@@ -38,7 +41,8 @@ export function useDashboardUrls() {
     setLoading(true);
     setError(null);
     try {
-      const newUrl = await addUrl(url);
+      const token = await getAccessToken();
+      const newUrl = await addUrl(url, token);
       setRunningUrls(urls => [...urls, newUrl]);
     } catch (err: any) {
       setError(err.message || 'Unknown error');
@@ -50,7 +54,8 @@ export function useDashboardUrls() {
 
   const handleStart = async (ids: string[]) => {
     try {
-      await startUrls(ids);
+      const token = await getAccessToken();
+      await startUrls(ids, token);
     } catch (err: any) {
       setError(err.message || 'Failed to start URLs');
       throw err;
@@ -58,7 +63,8 @@ export function useDashboardUrls() {
   };
   const handleStop = async (ids: string[]) => {
     try {
-      await stopUrls(ids);
+      const token = await getAccessToken();
+      await stopUrls(ids, token);
     } catch (err: any) {
       setError(err.message || 'Failed to stop URLs');
       throw err;
@@ -66,7 +72,8 @@ export function useDashboardUrls() {
   };
   const handleDelete = async (ids: string[]) => {
     try {
-      await deleteUrls(ids);
+      const token = await getAccessToken();
+      await deleteUrls(ids, token);
       setRunningUrls(urls => urls.filter(u => !ids.includes(String(u.id))));
     } catch (err: any) {
       setError(err.message || 'Failed to delete URLs');

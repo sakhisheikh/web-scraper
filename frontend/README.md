@@ -20,6 +20,64 @@
 
 ---
 
+## Running Unit Tests (Jest)
+
+- To run all unit tests:
+  ```
+  npm test
+  ```
+- To run only tests in a specific directory or file:
+  ```
+  npm test -- src/__tests__
+  npm test -- src/__tests__/AuthProvider.test.tsx
+  ```
+- To run in watch mode:
+  ```
+  npm test -- --watch
+  ```
+
+---
+
+## Running E2E Playwright tests
+
+This project includes end-to-end (E2E) tests for the dashboard and URL details flows using [Playwright](https://playwright.dev/).
+
+### 1. Start the mock backend
+In a separate terminal:
+```sh
+cd backend/test
+npm install express cors   # Only needed the first time
+node mock-server.js
+```
+This will start the mock backend at [http://localhost:3001](http://localhost:3001).
+
+### 2. Run the frontend with mock auth and mock backend
+In another terminal:
+```sh
+cd frontend
+VITE_USE_MOCK_AUTH=true VITE_API_URL=http://localhost:3001 npm run dev
+```
+
+### 3. Run the Playwright dashboard E2E test (which also checks details)
+In another terminal:
+```sh
+cd frontend
+npm run test:e2e -- test/dashboard.spec.ts
+```
+
+- This test will:
+  - Add a URL via the dashboard
+  - Wait for it to appear in the table
+  - Click the row to navigate to the details page
+  - Assert that the details page loads and displays the correct information
+
+### 4. (Optional) Run all E2E tests
+```sh
+npm run test:e2e
+```
+
+---
+
 ## Approach
 
 - **React + TypeScript + Vite** for fast, modern SPA development.

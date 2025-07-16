@@ -1,7 +1,7 @@
 import type { UrlAnalysis } from '../types/url';
 import type { UrlDetail } from '../types/urlDetail';
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 function handleNetworkError(err: any) {
   if (err instanceof TypeError && err.message === 'Failed to fetch') {
@@ -10,9 +10,11 @@ function handleNetworkError(err: any) {
   throw err;
 }
 
-export async function getUrls(): Promise<{ urls: UrlAnalysis[] }> {
+export async function getUrls(token?: string): Promise<{ urls: UrlAnalysis[] }> {
   try {
-    const res = await fetch(`${API_BASE}/urls`);
+    const res = await fetch(`${API_BASE}/urls`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
     if (!res.ok) throw new Error('Failed to fetch URLs');
     return res.json();
   } catch (err) {
@@ -21,11 +23,14 @@ export async function getUrls(): Promise<{ urls: UrlAnalysis[] }> {
   }
 }
 
-export async function addUrl(url: string): Promise<UrlAnalysis> {
+export async function addUrl(url: string, token?: string): Promise<UrlAnalysis> {
   try {
     const res = await fetch(`${API_BASE}/urls`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ url }),
     });
     if (!res.ok) throw new Error('Failed to add URL');
@@ -36,11 +41,14 @@ export async function addUrl(url: string): Promise<UrlAnalysis> {
   }
 }
 
-export async function startUrls(ids: (string|number)[]): Promise<void> {
+export async function startUrls(ids: (string|number)[], token?: string): Promise<void> {
   try {
     await fetch(`${API_BASE}/urls/start`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ ids }),
     });
   } catch (err) {
@@ -49,11 +57,14 @@ export async function startUrls(ids: (string|number)[]): Promise<void> {
   }
 }
 
-export async function stopUrls(ids: (string|number)[]): Promise<void> {
+export async function stopUrls(ids: (string|number)[], token?: string): Promise<void> {
   try {
     await fetch(`${API_BASE}/urls/stop`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ ids }),
     });
   } catch (err) {
@@ -62,11 +73,14 @@ export async function stopUrls(ids: (string|number)[]): Promise<void> {
   }
 }
 
-export async function deleteUrls(ids: (string|number)[]): Promise<void> {
+export async function deleteUrls(ids: (string|number)[], token?: string): Promise<void> {
   try {
     await fetch(`${API_BASE}/urls/delete`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ ids }),
     });
   } catch (err) {
@@ -75,9 +89,11 @@ export async function deleteUrls(ids: (string|number)[]): Promise<void> {
   }
 }
 
-export async function getUrlDetail(id: string | number): Promise<UrlDetail> {
+export async function getUrlDetail(id: string | number, token?: string): Promise<UrlDetail> {
   try {
-    const res = await fetch(`${API_BASE}/urls/${id}`);
+    const res = await fetch(`${API_BASE}/urls/${id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
     if (!res.ok) throw new Error('Failed to fetch URL detail');
     return res.json();
   } catch (err) {

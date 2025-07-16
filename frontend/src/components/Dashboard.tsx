@@ -5,7 +5,6 @@ import RunningUrlsTable from './table/RunningUrlsTable';
 import Loader from './Loader';
 import { useDashboardUrls } from './dashboard/useDashboardUrls';
 import { useStatCards } from './dashboard/useStatCards';
-import TableCard from './table/TableCard';
 
 const Dashboard: React.FC = () => {
   const {

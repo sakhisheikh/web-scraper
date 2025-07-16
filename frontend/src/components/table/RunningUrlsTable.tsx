@@ -352,7 +352,7 @@ const RunningUrlsTable: React.FC<RunningUrlsTableProps> = ({ data, onStart, onSt
     getFilteredRowModel: getFilteredRowModel(),
     initialState: {
       pagination: {
-        pageSize: 5,
+        pageSize: 10,
       },
     },
   });
@@ -391,7 +391,7 @@ const RunningUrlsTable: React.FC<RunningUrlsTableProps> = ({ data, onStart, onSt
       </div>
 
       {/* Table View for Desktop */}
-      <div className="hidden sm:block w-full h-full flex flex-col">
+      <div className="hidden sm:block w-full h-full flex flex-col min-h-[32rem]">
         {/* Bulk Actions */}
         {selectedUrlIds.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-4 items-center p-4 bg-indigo-50 rounded-md border border-indigo-200">

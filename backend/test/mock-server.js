@@ -11,7 +11,26 @@ app.use((req, res, next) => {
 
 // Mock data
 let urls = [
-  
+  {
+    id: 1,
+    url: 'https://example.com',
+    status: 'done',
+    htmlVersion: 'HTML5',
+    pageTitle: 'Example Domain',
+    h1Count: 1,
+    h2Count: 0,
+    h3Count: 0,
+    h4Count: 0,
+    h5Count: 0,
+    h6Count: 0,
+    internalLinkCount: 1,
+    externalLinkCount: 2,
+    inaccessibleLinkCount: 0,
+    brokenLinks: [],
+    hasLoginForm: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
 ];
 
 // GET /api/urls

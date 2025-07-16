@@ -1,8 +1,10 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	netURL "net/url"
 	"strings"
@@ -14,6 +16,8 @@ import (
 	"gorm.io/gorm"
 )
 
+// to cancel a crawl process
+var RunningCrawlContexts sync.Map
 var analysisQueue chan uint
 
 const numOfWorkers = 3
@@ -28,16 +32,27 @@ func StartWorkers(db *gorm.DB) {
 		analysisQueue = make(chan uint, 100)
 	}
 
-	for i := 0; i < numOfWorkers; i++ {
+	for i := range numOfWorkers {
 		go func(workerId int) {
 			for analysisID := range analysisQueue {
-				CrawlAndAnalyseURL(analysisID, db)
+
+				ctx, cancel := context.WithCancel(context.Background())
+
+				log.Printf("Worker %d: Registered context for ID %d.", workerId, analysisID)
+				RunningCrawlContexts.Store(analysisID, cancel)
+
+				CrawlAndAnalyseURL(ctx, analysisID, db)
+
+				cancel()
+				RunningCrawlContexts.Delete(analysisID)
+				log.Printf("Worker %d: Unregistered context for ID %d.", workerId, analysisID)
 			}
+
 		}(i)
 	}
 }
 
-func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
+func CrawlAndAnalyseURL(ctx context.Context, analysisID uint, db *gorm.DB) {
 	var urlAnalysis models.URLAnalysis
 
 	log.Println("Will crawl soon")
@@ -46,7 +61,20 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 		log.Printf("Error: couldn't find url for crawling for %d", analysisID)
 	}
 
-	// can i make sure if key is matched
+	select {
+	case <-ctx.Done(): // Context already canceled before starting
+		log.Printf("Worker processing URLAnalysis ID: %d - URL: %s was CANCELLED before starting crawl (context done). Status set to cancelled.", analysisID, urlAnalysis.URL)
+		db.Model(&urlAnalysis).Updates(map[string]interface{}{"status": "cancelled", "updated_at": gorm.Expr("NOW()")})
+		return
+	default: // Context not done yet, proceed
+	}
+
+	if urlAnalysis.Status == "cancelled" { // Defensive check, if DB status was cancelled externally
+		log.Printf("Worker processing URLAnalysis ID: %d - URL: %s is CANCELLED (DB status). Skipping crawl.", analysisID, urlAnalysis.URL)
+		return
+	}
+
+	// todo: can i make sure if key is matched
 	db.Model(&urlAnalysis).Update("Status", "running")
 
 	c := colly.NewCollector(
@@ -55,6 +83,21 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 	)
 
 	c.SetRequestTimeout(30 * time.Second)
+
+	// create context aware colly client to cancel crawl requests
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		TLSHandshakeTimeout: 10 * time.Second,
+	}
+	httpClientColly := &http.Client{
+		Transport: transport,
+		Timeout:   30 * time.Second,
+	}
+	c.SetClient(httpClientColly)
 
 	var crawlError error
 
@@ -152,25 +195,33 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 	var brokenLinks []models.BrokenLink = []models.BrokenLink{}
 	var inaccessibleLinksCount int
 	if crawlError == nil {
-		brokenLinks, inaccessibleLinksCount = checkLinks(allLinks)
+		brokenLinks, inaccessibleLinksCount = checkLinks(ctx, allLinks)
 
 	}
 
-	if crawlError != nil {
-		urlAnalysis.Status = "errored"
-	} else {
-		urlAnalysis.Status = "done"
-		urlAnalysis.H1Count = h1Count
-		urlAnalysis.H2Count = h2Count
-		urlAnalysis.H3Count = h3Count
-		urlAnalysis.H4Count = h4Count
-		urlAnalysis.H5Count = h5Count
-		urlAnalysis.H6Count = h6Count
-		urlAnalysis.HasLoginForm = hasLoginForm
-		urlAnalysis.InternalLinkCount = internalLinksCount
-		urlAnalysis.ExternalLinkCount = externalLinksCount
-		urlAnalysis.InaccessibleLinkCount = inaccessibleLinksCount
-		urlAnalysis.BrokenLinks = brokenLinks
+	select {
+	case <-ctx.Done():
+		log.Printf("Worker processing URLAnalysis ID: %d - URL: %s was CANCELLED during crawl or before final save (context done).", analysisID, urlAnalysis.URL)
+		urlAnalysis.Status = "cancelled"
+		urlAnalysis.PageTitle = "Crawl cancelled." // Provide a clear title for cancelled state
+		urlAnalysis.BrokenLinks = []models.BrokenLink{}
+	default:
+		if crawlError != nil {
+			urlAnalysis.Status = "errored"
+		} else {
+			urlAnalysis.Status = "done"
+			urlAnalysis.H1Count = h1Count
+			urlAnalysis.H2Count = h2Count
+			urlAnalysis.H3Count = h3Count
+			urlAnalysis.H4Count = h4Count
+			urlAnalysis.H5Count = h5Count
+			urlAnalysis.H6Count = h6Count
+			urlAnalysis.HasLoginForm = hasLoginForm
+			urlAnalysis.InternalLinkCount = internalLinksCount
+			urlAnalysis.ExternalLinkCount = externalLinksCount
+			urlAnalysis.InaccessibleLinkCount = inaccessibleLinksCount
+			urlAnalysis.BrokenLinks = brokenLinks
+		}
 	}
 
 	result := db.Select("*").Save(&urlAnalysis)
@@ -182,10 +233,17 @@ func CrawlAndAnalyseURL(analysisID uint, db *gorm.DB) {
 
 }
 
-func checkLinks(links []string) ([]models.BrokenLink, int) {
+func checkLinks(ctx context.Context, links []string) ([]models.BrokenLink, int) {
 
 	if len(links) == 0 {
 		return []models.BrokenLink{}, 0
+	}
+
+	select {
+	case <-ctx.Done():
+		log.Printf("Context cancelled before starting link checks: %v", ctx.Err())
+		return []models.BrokenLink{}, 0
+	default:
 	}
 
 	linksToCheck := make(chan string, len(links))
@@ -207,6 +265,13 @@ func checkLinks(links []string) ([]models.BrokenLink, int) {
 			defer wg.Done()
 			for link := range linksToCheck {
 				func(currentLink string) {
+
+					select {
+					case <-ctx.Done():
+						log.Printf("Worker: Context cancelled while checking links. Skipping remaining links.")
+						return // Stop this worker goroutine
+					default:
+					}
 					resp, err := httpClient.Head(currentLink)
 
 					if err != nil {

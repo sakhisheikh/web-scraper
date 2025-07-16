@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -166,6 +167,68 @@ func GetUrlByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, urlAnalysis)
+}
+
+func CancelUrl(c *gin.Context) {
+	dbInstance, exists := c.Get("db")
+
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database instance not found"})
+		return
+	}
+
+	db := dbInstance.(*gorm.DB)
+
+	idParam := c.Param("id")
+
+	id, err := strconv.ParseInt(idParam, 10, 64) // base 10, 64-bit integer
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid URL ID format"})
+		return
+	}
+
+	var urlAnalysis models.URLAnalysis
+	result := db.First(&urlAnalysis, id)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "URL analysis not found"})
+		} else {
+			log.Printf("Error [CancelURL]: Failed to fetch URL %d for cancel: %v", id, result.Error)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch URL for cancel: " + result.Error.Error()})
+		}
+		return
+	}
+
+	// Check if it's already in a final state
+	if urlAnalysis.Status == "done" || urlAnalysis.Status == "error" || urlAnalysis.Status == "cancelled" {
+		c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("URL analysis is already %s. Cannot cancel.", urlAnalysis.Status)})
+		return
+	}
+
+	updateResult := db.Model(&urlAnalysis).Updates(map[string]interface{}{
+		"status":     "cancelled",
+		"updated_at": gorm.Expr("NOW()"),
+	})
+
+	if updateResult.Error != nil {
+		log.Printf("Error [CancelURL]: Failed to cancel URL analysis %d: %v", id, updateResult.Error)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel URL analysis: " + updateResult.Error.Error()})
+		return
+	}
+
+	if cancel, ok := services.RunningCrawlContexts.Load(urlAnalysis.ID); ok {
+		// We found a cancel function for this running job
+		cancel.(context.CancelFunc)()
+		services.RunningCrawlContexts.Delete(urlAnalysis.ID)
+		log.Printf("Triggered cancellation for running URLAnalysis ID: %d", urlAnalysis.ID)
+	} else {
+		// Job was likely queued or paused, not actively running at the moment
+		log.Printf("URLAnalysis ID: %d was not actively running, only status updated to 'cancelled'.", urlAnalysis.ID)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "URL analysis cancelled successfully", "id": urlAnalysis.ID, "status": "cancelled"})
+
 }
 
 func main() {

@@ -27,7 +27,7 @@ export default function UrlDetailPage() {
   }, [id, getAccessToken]);
 
   const handleBackToDashboard = () => {
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   if (loading) return <Loader text="Loading URL details..." />;

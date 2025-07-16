@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useCallback } from 'react';
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
 
 const isMock = import.meta.env.VITE_USE_MOCK_AUTH === 'true';
@@ -36,6 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     return <AuthContext.Provider value={mockValue}>{children}</AuthContext.Provider>;
   }
+  console.log("AUTH IS PROBLEMATIC")
 
   if (!domain || !clientId || !audience) {
     return (
@@ -50,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       </div>
     );
   }
+  console.log("AUTH IS PROBLEMATIC")
 
   return (
     <Auth0Provider
@@ -68,13 +70,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 // Bridge Auth0 context to our own
 const AuthContextBridge: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading, loginWithRedirect, logout, user, getAccessTokenSilently } = useAuth0();
-  const getAccessToken = async () => {
+  const getAccessToken = useCallback(async () => {
     try {
       return await getAccessTokenSilently();
     } catch {
       return undefined;
     }
-  };
+  }, [getAccessTokenSilently]);
+
+  console.log("AUTH IS PROBLEMATIC")
   const value: AuthContextType = { isAuthenticated, isLoading, loginWithRedirect, logout, user, getAccessToken };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }; 

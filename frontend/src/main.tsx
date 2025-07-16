@@ -6,11 +6,7 @@ import RequireAuth from './auth/RequireAuth';
 import { AuthProvider } from './auth/AuthContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
     <AuthProvider>
-      <RequireAuth>
-        <App />
-      </RequireAuth>
+      <App />
     </AuthProvider>
-  </React.StrictMode>
 );

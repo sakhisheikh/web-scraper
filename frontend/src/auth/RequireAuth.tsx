@@ -9,8 +9,11 @@ interface RequireAuthProps {
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const { isAuthenticated, isLoading, loginWithRedirect } = useAuth();
 
+  console.log("requireAuth")
+
   React.useEffect(() => {
     if (!isLoading && !isAuthenticated) {
+      
       loginWithRedirect();
     }
   }, [isLoading, isAuthenticated, loginWithRedirect]);

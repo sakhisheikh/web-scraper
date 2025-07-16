@@ -8,6 +8,8 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const menuItems = [{ name: 'Dashboard', icon: '📊' }];
 
+  console.log("RENDERING sidebar")
+
   return (
     <>
       {/* Mobile overlay */}

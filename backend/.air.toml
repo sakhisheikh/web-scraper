@@ -1,0 +1,30 @@
+
+
+root = "."        # Watch current directory (which is 'backend/')
+tmp_dir = "tmp"   # Temporary directory for air builds
+
+[build]
+  cmd = "go build -o ./tmp/app ."
+  bin = "./tmp/app"
+  full_bin = ""
+  include_ext = ["go", "tpl", "tmpl", "html", "toml", "json"]
+  # Exclude directories where source code changes are irrelevant for Go build
+  exclude_dir = ["assets", "tmp", "vendor", "test"]
+
+[run]
+  cmd = "./tmp/app"
+  args = []
+
+[watch]
+  paths = ["."]  # Watch current directory
+  # Example if test/node_modules exists directly under backend/:
+  exclude_dir = ["tmp", "vendor", "test"]
+
+[log]
+  time = true
+
+[color]
+  main = "magenta"
+  watcher = "cyan"
+  build = "yellow"
+  runner = "green"

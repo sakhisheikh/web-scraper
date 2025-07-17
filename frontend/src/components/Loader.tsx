@@ -18,11 +18,11 @@ const Loader: React.FC<LoaderProps> = ({
   };
 
   return (
-    <div className={`fixed inset-0 flex items-center justify-center bg-white bg-opacity-75 z-50 ${className}`}>
-      <div className="flex flex-col items-center space-y-4">
-        <div className={`${sizeClasses[size]} animate-spin rounded-full border-4 border-gray-200 border-t-indigo-600`}></div>
+    <div className={`flex items-center justify-center p-8 ${className}`}>
+      <div className="flex flex-col items-center space-y-3">
+        <div className={`${sizeClasses[size]} animate-spin rounded-full border-2 border-gray-200 border-t-indigo-600`}></div>
         {text && (
-          <p className="text-gray-600 font-medium text-sm">{text}</p>
+          <p className="text-gray-500 text-sm">{text}</p>
         )}
       </div>
     </div>

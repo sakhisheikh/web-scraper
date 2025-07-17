@@ -20,7 +20,6 @@ const Dashboard: React.FC = () => {
   const { getAccessToken } = useAuth();
   const statCards = useStatCards(statCounts);
 
-  console.log("RE render")
 
 
   const handleAddUrl = useCallback(async (url: string) => {

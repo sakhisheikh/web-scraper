@@ -26,7 +26,8 @@ export function useDashboardUrls() {
         setLoading(false);
       }
     };
-    fetchUrls();
+
+    fetchUrls()
   }, []);
   const handleUrlUpdate = useCallback((updatedUrl: UrlAnalysis) => {
     setRunningUrls(urls =>
